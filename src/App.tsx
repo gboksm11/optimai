@@ -3,6 +3,7 @@ import ReactSVG from '@/assets/react.svg';
 import { Badge } from '@/components/ui/badge';
 import ChatBot from './pages/Chatbot';
 import Sidebar from './pages/sidebar';
+import StreamingTextDemo from './pages/text';
 
 interface Chat {
   id: string,

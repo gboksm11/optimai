@@ -1,13 +1,14 @@
-import React, { useState, useEffect, useRef, useCallback, act } from 'react';
+import React, { useState, useEffect, useRef, useCallback, act, useMemo } from 'react';
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Mic, Paperclip, Send } from 'lucide-react'
 import logo from "../assets/logo.png";
 import Image from '@/components/custom-components/Image';
-import loadingAnim from "../assets/loading-anim.webm";
+import loadingAnim from "../assets/loading-anim.gif";
+import MarkdownIt from 'markdown-it';
+import "./test.css";
 
-  
 interface TextContent {
     value: string;
     annotations?: any;
@@ -69,6 +70,9 @@ const ChatBot: React.FC<ChatBotProps> = ({ activeChat, onFirstPrompt }) => {
   const [isSending, setIsSending] = useState(false);
 
   const [chatImages, setChatImages] = useState<ChatImage[]>([]); // image urls
+  const [chatFiles, setChatFiles] = useState<any[]>([]);
+
+  const mdParser = useMemo(() => new MarkdownIt(), []);
 
   const loadMessages = useCallback(async () => {
     if (activeChat !== "1") {
@@ -133,9 +137,9 @@ const ChatBot: React.FC<ChatBotProps> = ({ activeChat, onFirstPrompt }) => {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInput(e.target.value);
   };
-  console.log(isSending)
+  //console.log(isSending)
   const handleSend = async (e: React.FormEvent<HTMLFormElement>) => {
-    console.log("hello")
+    //console.log("hello")
     e.preventDefault();
     if (isSending) return;
 
@@ -173,6 +177,8 @@ const ChatBot: React.FC<ChatBotProps> = ({ activeChat, onFirstPrompt }) => {
 
     const messageImages = [...selectedImagesURLs];
 
+    const userMessageIndexId = messages.length;
+
     setChatImages([...chatImages, {id: messages.length, images: messageImages}]);
     setMessages(prev => [...prev, newMessage]);
 
@@ -204,6 +210,7 @@ const ChatBot: React.FC<ChatBotProps> = ({ activeChat, onFirstPrompt }) => {
         if (done) break;
         
         const chunk = new TextDecoder().decode(value);
+        console.log(`chunk = ${chunk}`)
         const lines = chunk.split('\n').filter(line => line.trim() !== '');
         
         for (const line of lines) {
@@ -232,6 +239,16 @@ const ChatBot: React.FC<ChatBotProps> = ({ activeChat, onFirstPrompt }) => {
                 return newMessages;
               });
           }
+          if (event.type == "file") {
+            const file_id_generated = event.file_id;
+            const file_type = event.file_type;
+
+            console.log("file generated id = ", file_id_generated);
+            console.log("file type = ", file_type);
+
+            const file_url = await fetchImageById(file_id_generated, file_type);
+            setChatFiles(prev => [...prev, {id: userMessageIndexId, fileUrl: file_url}])
+          }
         }
       }
     } catch (error) {
@@ -245,6 +262,7 @@ const ChatBot: React.FC<ChatBotProps> = ({ activeChat, onFirstPrompt }) => {
     const messageContents = message.content;
     let messageText = "";
     let messageImages = [];
+    let messageFileUrl = "";
 
 
 
@@ -254,12 +272,21 @@ const ChatBot: React.FC<ChatBotProps> = ({ activeChat, onFirstPrompt }) => {
                 messageImages = [...chatImg.images];
             }
         }
+    });
+
+    chatFiles.map(chatFile => {
+      if (chatFile.id == index) {
+        messageFileUrl = chatFile.fileUrl;
+      }
     })
+
+    
 
 
     for (const messageContent of messageContents) {
         if (messageContent.type == "text" ) {
             messageText = messageContent.text.value;
+            //console.log(messageText)
         } else if (messageContent.type == "image_file") {
 
         }
@@ -271,15 +298,21 @@ const ChatBot: React.FC<ChatBotProps> = ({ activeChat, onFirstPrompt }) => {
                 <Image width={192} key={index} src={image} className="w-48 rounded"></Image>
         // <img key={index} src={image} alt="preview" className="w-48 rounded" />
         ))}
-            <p>{messageText}</p>
+            {messageFileUrl && <embed src={messageFileUrl} type="application/pdf" width="100%" height="600px" />}
+
+            {/* <p>{messageText}</p> */}
+
+            {/* <div className='inline' dangerouslySetInnerHTML={{__html: marked.parse(messageText)}}></div>*/}
+
+            <div className='markdown-content' dangerouslySetInnerHTML={{__html: mdParser.render(messageText)}}></div>
         </div>
     )
   }
 
   // Function to fetch image from OpenAI and create ObjectURL
-  const fetchImageById = async (fileId : string) => {
+  const fetchImageById = async (fileId : string, fileType: string = "") => {
     try {
-      const response = await fetch(`/api/getFile/${fileId}`);
+      const response = await fetch(`/api/getFile/${fileId}${fileType ? `?fileType=${fileType}` : ""}`);
       const blob = await response.blob();
       const objectUrl = URL.createObjectURL(blob);
       return objectUrl;
@@ -332,16 +365,17 @@ const ChatBot: React.FC<ChatBotProps> = ({ activeChat, onFirstPrompt }) => {
   return (
     <div className="flex flex-col h-full w-full bg-white rounded-lg overflow-hidden">
 
-      <ScrollArea className="flex-grow p-4 pl-16 pr-16">
+      <ScrollArea className="flex-grow p-4 pl-16 pr-16 whitespace-pre-wrap">
         
         {messages.length == 0 &&
             <img className='ml-auto mr-auto w-72' src={logo}></img>
         }
         {isLoadingMessages ? (
-            <video className='ml-auto mr-auto' autoPlay loop muted width="500">
-                <source src={loadingAnim} type="video/webm" />
-              Your browser does not support the video tag.
-            </video>
+            // <video className='ml-auto mr-auto' autoPlay loop muted width="500">
+            //     <source src={loadingAnim} type="video/webm" />
+            //   Your browser does not support the video tag.
+            // </video>
+            <img className='w-72 ml-auto mr-auto mt-12' src={loadingAnim}></img>
         ) : (
           messages.map((message, index) => (
             <div key={index} className={`mb-4 ${message.role === 'user' ? 'text-right' : 'text-left'}`}>

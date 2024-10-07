@@ -1,0 +1,7 @@
+
+
+  .markdown-content ul, .markdown-content ol {
+    line-height: normal;
+    display: flex;
+    flex-direction: column;
+  }
