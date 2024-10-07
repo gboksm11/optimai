@@ -17,7 +17,9 @@ function App() {
   useEffect(() => {
     const storedChats = localStorage.getItem("chats");
     if (storedChats) {
-      setChats(JSON.parse(storedChats));
+      const chats = JSON.parse(storedChats)
+      setChats(chats);
+      setActiveChat(chats[0].id)
     }
   }, []);
 

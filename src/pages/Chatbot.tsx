@@ -4,7 +4,8 @@ import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Mic, Paperclip, Send } from 'lucide-react'
 import logo from "../assets/logo.png";
-
+import Image from '@/components/custom-components/Image';
+import loadingAnim from "../assets/loading-anim.webm";
 
   
 interface TextContent {
@@ -44,7 +45,7 @@ interface TextContent {
   }
 
   interface ChatImage {
-    id: string,
+    id: number,
     images: any []
   }
   
@@ -84,8 +85,9 @@ const ChatBot: React.FC<ChatBotProps> = ({ activeChat, onFirstPrompt }) => {
 
 
         const chatImages : ChatImage[] = [];
-    
+        let index = -1;
         for (const message of messages) {
+            index++;
             const messageURLs = [];
             const messageImages = message.content.filter(c => c.type === 'image_file');
 
@@ -95,8 +97,7 @@ const ChatBot: React.FC<ChatBotProps> = ({ activeChat, onFirstPrompt }) => {
                 messageURLs.push(objectUrl)
             }
 
-            console.log(messageURLs);
-            chatImages.push({id: message.id, images: messageURLs})
+            chatImages.push({id: index, images: messageURLs})
         }
 
         setChatImages(chatImages)
@@ -132,12 +133,15 @@ const ChatBot: React.FC<ChatBotProps> = ({ activeChat, onFirstPrompt }) => {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInput(e.target.value);
   };
-
+  console.log(isSending)
   const handleSend = async (e: React.FormEvent<HTMLFormElement>) => {
+    console.log("hello")
     e.preventDefault();
     if (isSending) return;
 
     setIsSending(true);
+
+
     const newMessage : Message = {
         threadId: activeChat,
         role: "user",
@@ -167,10 +171,13 @@ const ChatBot: React.FC<ChatBotProps> = ({ activeChat, onFirstPrompt }) => {
         formData.append('images', image);  // Append images (image files)
     });
 
+    const messageImages = [...selectedImagesURLs];
+
+    setChatImages([...chatImages, {id: messages.length, images: messageImages}]);
     setMessages(prev => [...prev, newMessage]);
 
-    const messageImages = [...selectedImagesURLs];
-    console.log(messageImages)
+
+
 
     setSelectedFiles([]);
     setSelectedImages([]);
@@ -203,7 +210,6 @@ const ChatBot: React.FC<ChatBotProps> = ({ activeChat, onFirstPrompt }) => {
           const event = JSON.parse(line.replace(/^data: /, ''));
           if (event.type === 'message_id') {
             newMessageId = event.messageId;
-
           }
           if (event.type === 'message') {
            setMessages(prev => {
@@ -227,7 +233,6 @@ const ChatBot: React.FC<ChatBotProps> = ({ activeChat, onFirstPrompt }) => {
               });
           }
         }
-        setChatImages([...chatImages, {id: newMessageId, images: messageImages}]);
       }
     } catch (error) {
       console.error('Error sending message:', error);
@@ -236,7 +241,7 @@ const ChatBot: React.FC<ChatBotProps> = ({ activeChat, onFirstPrompt }) => {
     }
   };
 
-  const parseMessage = (message: Message) => {
+  const parseMessage = (message: Message, index: number) => {
     const messageContents = message.content;
     let messageText = "";
     let messageImages = [];
@@ -244,9 +249,7 @@ const ChatBot: React.FC<ChatBotProps> = ({ activeChat, onFirstPrompt }) => {
 
 
     chatImages.map(chatImg => {
-        if (chatImg.id == message.id) {
-            console.log(chatImg.id);
-            console.log(message.id);
+        if (chatImg.id == index) {
             if (chatImg.images) {
                 messageImages = [...chatImg.images];
             }
@@ -265,7 +268,8 @@ const ChatBot: React.FC<ChatBotProps> = ({ activeChat, onFirstPrompt }) => {
     return (
         <div>
             {messageImages.length > 0 && messageImages.map((image, index) => (
-        <img key={index} src={image} alt="preview" className="w-48 rounded" />
+                <Image width={192} key={index} src={image} className="w-48 rounded"></Image>
+        // <img key={index} src={image} alt="preview" className="w-48 rounded" />
         ))}
             <p>{messageText}</p>
         </div>
@@ -313,7 +317,7 @@ const ChatBot: React.FC<ChatBotProps> = ({ activeChat, onFirstPrompt }) => {
         setSelectedFiles(nonImages);
       
       // You can handle file upload here, or set files in state for later use.
-      console.log(filesArray);
+      //console.log(filesArray);
     }
   };
 
@@ -325,25 +329,30 @@ const ChatBot: React.FC<ChatBotProps> = ({ activeChat, onFirstPrompt }) => {
     }, 1500);
   };
 
-
   return (
-    <div className="flex flex-col h-full w-full bg-gray-100 rounded-lg overflow-hidden">
+    <div className="flex flex-col h-full w-full bg-white rounded-lg overflow-hidden">
+
       <ScrollArea className="flex-grow p-4 pl-16 pr-16">
+        
         {messages.length == 0 &&
             <img className='ml-auto mr-auto w-72' src={logo}></img>
         }
         {isLoadingMessages ? (
-          <div className="text-center">Loading messages...</div>
+            <video className='ml-auto mr-auto' autoPlay loop muted width="500">
+                <source src={loadingAnim} type="video/webm" />
+              Your browser does not support the video tag.
+            </video>
         ) : (
           messages.map((message, index) => (
             <div key={index} className={`mb-4 ${message.role === 'user' ? 'text-right' : 'text-left'}`}>
               <div className={`inline-block p-2 rounded-lg ${message.role === 'user' ? 'bg-blue-500 text-white' : 'bg-black'}`}>
-                {parseMessage(message)}
+                {parseMessage(message, index)}
               </div>
             </div>
           ))
         )}
       </ScrollArea>
+      
       <form onSubmit={handleSend} className="p-4 bg-white">
         <div className="flex items-center space-x-2">
           <Button type="button" variant="outline" size="icon" onClick={handleVoice}>
