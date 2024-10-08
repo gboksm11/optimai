@@ -10,6 +10,10 @@ interface Chat {
   title: string
 }
 
+const baseApiUrl = import.meta.env.MODE === 'production'
+  ? import.meta.env.VITE_API_BASE_URL
+  : '';
+
 function App() {
   const [chats, setChats] = useState<Chat[]>([]);
   const [activeChat, setActiveChat] = useState<string>('1');
@@ -26,7 +30,7 @@ function App() {
 
   const handleNewChat = async() => {
 
-    const response = await fetch('/api/createThread', {
+    const response = await fetch(`${baseApiUrl}/api/createThread`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json"

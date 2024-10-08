@@ -9,6 +9,10 @@ import loadingAnim from "../assets/loading-anim.gif";
 import MarkdownIt from 'markdown-it';
 import "./test.css";
 
+const baseApiUrl = import.meta.env.MODE === 'production'
+  ? import.meta.env.VITE_API_BASE_URL
+  : '';
+
 interface TextContent {
     value: string;
     annotations?: any;
@@ -79,7 +83,7 @@ const ChatBot: React.FC<ChatBotProps> = ({ activeChat, onFirstPrompt }) => {
         console.log(activeChat)
         setIsLoadingMessages(true);
         try {
-          const response = await fetch(`/api/getThreadMessages?id=${activeChat}`);
+          const response = await fetch(`${baseApiUrl}/api/getThreadMessages?id=${activeChat}`);
           if (!response.ok) {
             throw new Error('Failed to load messages');
           }
@@ -191,7 +195,7 @@ const ChatBot: React.FC<ChatBotProps> = ({ activeChat, onFirstPrompt }) => {
     setInput('');
 
     try {
-      const response = await fetch('/api/assistant', {
+      const response = await fetch(`${baseApiUrl}/api/assistant`, {
         method: 'POST',
         body: formData
       });
@@ -312,7 +316,7 @@ const ChatBot: React.FC<ChatBotProps> = ({ activeChat, onFirstPrompt }) => {
   // Function to fetch image from OpenAI and create ObjectURL
   const fetchImageById = async (fileId : string, fileType: string = "") => {
     try {
-      const response = await fetch(`/api/getFile/${fileId}${fileType ? `?fileType=${fileType}` : ""}`);
+      const response = await fetch(`${baseApiUrl}/api/getFile/${fileId}${fileType ? `?fileType=${fileType}` : ""}`);
       const blob = await response.blob();
       const objectUrl = URL.createObjectURL(blob);
       return objectUrl;

@@ -8,7 +8,7 @@ interface ImageProps {
     width: number,
 }
 
-const Image: React.FC<ImageProps> = ({ src, width, height, className, key }) => {
+const Image: React.FC<ImageProps> = ({ src, width, className, key }) => {
   const [loading, setLoading] = useState(true); // Initially, the image is loading
 
   const handleImageLoad = () => {
