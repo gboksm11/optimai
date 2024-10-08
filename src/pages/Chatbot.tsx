@@ -445,13 +445,11 @@ const ChatBot: React.FC<ChatBotProps> = ({ activeChat, onFirstPrompt, isMobile }
                 <Paperclip className="h-4 w-4" />
               </Button>
             </div>
-            <Textarea
+            <Input
               value={input}
               onChange={handleInputChange}
               placeholder="Type a message..."
-              className="flex-1 h-auto resize-none"  // Allow text area to grow
-              rows={3}                              // Minimum height of 3 rows
-              style={{ minHeight: '20px', maxHeight: '37px' }} 
+              className="flex-1"  // Allow text area to grow
             />
             <Button type="submit" disabled={isSending || !input.trim()}>
               <Send className="h-4 w-4" />
