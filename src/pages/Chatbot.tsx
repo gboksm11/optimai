@@ -303,8 +303,11 @@ const ChatBot: React.FC<ChatBotProps> = ({ activeChat, onFirstPrompt }) => {
             {/* <p>{messageText}</p> */}
 
             {/* <div className='inline' dangerouslySetInnerHTML={{__html: marked.parse(messageText)}}></div>*/}
+            { message.role == "assistant" ? 
+                      <div className='markdown-content' dangerouslySetInnerHTML={{__html: mdParser.render(messageText)}}></div> :
+                      <p>{messageText}</p>
+            }
 
-            <div className='markdown-content' dangerouslySetInnerHTML={{__html: mdParser.render(messageText)}}></div>
         </div>
     )
   }
