@@ -12,14 +12,14 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ chats, activeChat, onSelectChat, onNewChat }) => {
     return (
-        <div className="w-64 bg-gray-900 text-white h-screen flex flex-col">
+        <div className="w-64 bg-gray-900 text-white h-full flex flex-col">
           <div className="p-4">
-            <p className='p-4 scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl'>Optim<span className='text-[#012ea5]'>AI</span></p>
+            <p className='p-4 scroll-m-20 text-2xl font-extrabold tracking-tight lg:text-4xl'>Optim<span className='text-[#012ea5]'>AI</span></p>
             <Button onClick={onNewChat} className="w-full bg-gray-700 hover:bg-gray-600">
               <PlusCircle className="mr-2 h-4 w-4" /> New chat
             </Button>
           </div>
-          <ScrollArea className="flex-grow w-full flex flex-col items-center justify-start ">
+          <ScrollArea className="flex-grow w-full flex flex-col items-center justify-start">
             {chats.map((chat) => (
               <Button
                 key={chat.id}
@@ -33,7 +33,7 @@ const Sidebar: React.FC<SidebarProps> = ({ chats, activeChat, onSelectChat, onNe
             ))}
           </ScrollArea>
         </div>
-      );
+    );
 };
 
 export default Sidebar;

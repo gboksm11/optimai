@@ -26,6 +26,7 @@ const Image: React.FC<ImageProps> = ({ src, width, className, key }) => {
         key={key}
         src={src}
         className={className}
+        style={{width: width}}
         onLoad={handleImageLoad} 
         onError={handleImageError} 
       />
