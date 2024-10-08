@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback, act, useMemo } from 'react';
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Mic, Paperclip, Send } from 'lucide-react'
 import logo from "../assets/logo.png";
@@ -169,6 +170,7 @@ const ChatBot: React.FC<ChatBotProps> = ({ activeChat, onFirstPrompt, isMobile }
   }, [messages])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    e.preventDefault()
     setInput(e.target.value);
   };
   //console.log(isSending)
@@ -281,7 +283,7 @@ const ChatBot: React.FC<ChatBotProps> = ({ activeChat, onFirstPrompt, isMobile }
             console.log("file type = ", file_type);
 
             const file_url = await fetchImageById(file_id_generated, file_type);
-            setChatFiles(prev => [...prev, {id: userMessageIndexId, fileUrl: file_url}])
+            setChatFiles(prev => [...prev, {id: userMessageIndexId + 1, fileUrl: file_url}])
           }
         }
       }
@@ -332,15 +334,16 @@ const ChatBot: React.FC<ChatBotProps> = ({ activeChat, onFirstPrompt, isMobile }
                 <Image width={350} key={index} src={image} className="w-48 rounded"></Image>
         // <img key={index} src={image} alt="preview" className="w-48 rounded" />
         ))}
-            {messageFileUrl && <embed src={messageFileUrl} type="application/pdf" width="100%" height="600px" />}
 
             {/* <p>{messageText}</p> */}
 
             {/* <div className='inline' dangerouslySetInnerHTML={{__html: marked.parse(messageText)}}></div>*/}
             { message.role == "assistant" ? 
                       <div className='markdown-content' dangerouslySetInnerHTML={{__html: mdParser.render(messageText)}}></div> :
-                      <p>{messageText}</p>
+                      <p className='text-left'>{messageText}</p>
             }
+
+            {messageFileUrl && <embed src={messageFileUrl} type="application/pdf" width="100%" height="600px" />}
 
         </div>
     )
@@ -438,11 +441,13 @@ const ChatBot: React.FC<ChatBotProps> = ({ activeChat, onFirstPrompt, isMobile }
                 <Paperclip className="h-4 w-4" />
               </Button>
             </div>
-            <Input
+            <Textarea
               value={input}
               onChange={handleInputChange}
               placeholder="Type a message..."
-              className="flex-1"
+              className="flex-1 h-auto resize-none"  // Allow text area to grow
+              rows={3}                              // Minimum height of 3 rows
+              style={{ minHeight: '20px', maxHeight: '37px' }} 
             />
             <Button type="submit" disabled={isSending || !input.trim()}>
               <Send className="h-4 w-4" />
