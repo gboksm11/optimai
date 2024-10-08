@@ -54,9 +54,10 @@ interface TextContent {
 interface ChatBotProps {
   activeChat: string // id of thread to be loaded
   onFirstPrompt: (chatTitle: string) => void
+  isMobile: boolean
 }
 
-const ChatBot: React.FC<ChatBotProps> = ({ activeChat, onFirstPrompt }) => {
+const ChatBot: React.FC<ChatBotProps> = ({ activeChat, onFirstPrompt, isMobile }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState<string>('');
 
@@ -73,6 +74,39 @@ const ChatBot: React.FC<ChatBotProps> = ({ activeChat, onFirstPrompt }) => {
   const [chatFiles, setChatFiles] = useState<any[]>([]);
 
   const mdParser = useMemo(() => new MarkdownIt(), []);
+
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (isMobile) {
+      // Mobile-specific adjustments
+      const metaViewport = document.querySelector('meta[name=viewport]');
+      const viewportContent = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0';
+      if (metaViewport) {
+        metaViewport.setAttribute('content', viewportContent);
+      } else {
+        const newMetaViewport = document.createElement('meta');
+        newMetaViewport.name = 'viewport';
+        newMetaViewport.content = viewportContent;
+        document.head.appendChild(newMetaViewport);
+      }
+    }
+  }, [isMobile]);
+
+  useEffect(() => {
+    if (scrollAreaRef.current) {
+      scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
+    }
+  }, [messages]);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({behavior: "instant" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   const loadMessages = useCallback(async () => {
     if (activeChat !== "1") {
@@ -293,9 +327,9 @@ const ChatBot: React.FC<ChatBotProps> = ({ activeChat, onFirstPrompt }) => {
     }
 
     return (
-        <div>
+        <div className='message'>
             {messageImages.length > 0 && messageImages.map((image, index) => (
-                <Image width={192} key={index} src={image} className="w-48 rounded"></Image>
+                <Image width={350} key={index} src={image} className="w-48 rounded"></Image>
         // <img key={index} src={image} alt="preview" className="w-48 rounded" />
         ))}
             {messageFileUrl && <embed src={messageFileUrl} type="application/pdf" width="100%" height="600px" />}
@@ -367,79 +401,68 @@ const ChatBot: React.FC<ChatBotProps> = ({ activeChat, onFirstPrompt }) => {
 
   return (
     <div className="flex flex-col h-full w-full bg-white rounded-lg overflow-hidden">
-
-      <ScrollArea className="flex-grow p-4 pl-16 pr-16 whitespace-pre-wrap">
-        
+      <ScrollArea className="flex-grow p-4 md:px-16 whitespace-pre-wrap overflow-y-auto" ref={scrollAreaRef}>
         {messages.length == 0 &&
-            <img className='ml-auto mr-auto w-72' src={logo}></img>
+            <img className='mx-auto w-48 md:w-72' src={logo} alt="Logo" />
         }
         {isLoadingMessages ? (
-            // <video className='ml-auto mr-auto' autoPlay loop muted width="500">
-            //     <source src={loadingAnim} type="video/webm" />
-            //   Your browser does not support the video tag.
-            // </video>
-            <img className='w-72 ml-auto mr-auto mt-12' src={loadingAnim}></img>
+            <img className='w-48 md:w-72 mx-auto mt-12' src={loadingAnim} alt="Loading" />
         ) : (
           messages.map((message, index) => (
             <div key={index} className={`mb-4 ${message.role === 'user' ? 'text-right' : 'text-left'}`}>
-              <div className={`inline-block p-2 rounded-lg ${message.role === 'user' ? 'bg-blue-500 text-white' : 'bg-black'}`}>
+              <div className={`inline-block p-2 rounded-lg ${message.role === 'user' ? 'bg-blue-500 text-white' : 'bg-gray-200 text-black'}`}>
                 {parseMessage(message, index)}
               </div>
             </div>
           ))
         )}
+        <div ref={messagesEndRef} />
       </ScrollArea>
       
       <form onSubmit={handleSend} className="p-4 bg-white">
-        <div className="flex items-center space-x-2">
-          <Button type="button" variant="outline" size="icon" onClick={handleVoice}>
-            <Mic className="h-4 w-4" />
-          </Button>
-          <div>
-            <input
+        <div className="flex flex-col space-y-2">
+          <div className="flex space-x-2">
+            <Button type="button" variant="outline" size="icon" onClick={handleVoice}>
+              <Mic className="h-4 w-4" />
+            </Button>
+            <div>
+              <input
                 type="file"
                 ref={fileInputRef}
                 style={{ display: 'none' }}
                 onChange={handleFileSelect}
                 accept=".txt, .pdf, .doc, .docx, image/*"
-                multiple // Accept specific file types
-            />
-            <Button type="button" variant="outline" size="icon" onClick={handleUploadClick} disabled={isUploading}>
+                multiple
+              />
+              <Button type="button" variant="outline" size="icon" onClick={handleUploadClick} disabled={isUploading}>
                 <Paperclip className="h-4 w-4" />
+              </Button>
+            </div>
+            <Input
+              value={input}
+              onChange={handleInputChange}
+              placeholder="Type a message..."
+              className="flex-1"
+            />
+            <Button type="submit" disabled={isSending || !input.trim()}>
+              <Send className="h-4 w-4" />
             </Button>
           </div>
-
-                    {/* Render selected images */}
-            {selectedImages.length > 0 && (
-            <div className="image-preview flex space-x-2">
+          
+          {(selectedImages.length > 0 || selectedFiles.length > 0) && (
+            <div className="flex flex-wrap gap-2">
               {selectedImagesURLs.map((image, index) => (
-                <img key={index} src={image} alt="preview" className="h-10 w-10 rounded" />
+                <img key={index} src={image} alt="preview" className="h-10 w-10 rounded object-cover" />
               ))}
-            </div>
-            )}
-
-                      {/* Render non-image files */}
-          {selectedFiles.length > 0 && (
-            <div className="file-preview flex space-x-2">
               {selectedFiles.map((file, index) => (
                 <div key={index} className="h-10 w-10 flex items-center justify-center bg-gray-200 rounded">
                   <p className="text-xs text-gray-600 text-center">
-                    {file.name}<br />({file.type.split('/').pop()})
+                    {file.name.slice(0, 6)}...<br />({file.type.split('/').pop()})
                   </p>
                 </div>
               ))}
             </div>
           )}
-          
-          <Input
-            value={input}
-            onChange={handleInputChange}
-            placeholder="Type a message..."
-            className="flex-1"
-          />
-          <Button type="submit" disabled={isSending || !input.trim()}>
-            <Send className="h-4 w-4" />
-          </Button>
         </div>
       </form>
     </div>

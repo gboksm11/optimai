@@ -2,7 +2,6 @@
   .markdown-content ul, .markdown-content ol {
     display: flex;
     flex-direction: column;
-    justify-content: flex-start;
   }
 
   .markdown-content ol {
@@ -26,4 +25,12 @@
     margin-top: 0px;
     padding-top: 0px;
     display: list-item;
+  }
+
+  .markdown-content {
+  }
+
+  .message {
+    padding-left: 0.25rem;
+    padding-right: 0.25rem;
   }
