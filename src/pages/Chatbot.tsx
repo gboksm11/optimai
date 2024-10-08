@@ -10,10 +10,6 @@ import loadingAnim from "../assets/loading-anim.gif";
 import MarkdownIt from 'markdown-it';
 import "./test.css";
 
-const baseApiUrl = import.meta.env.MODE === 'production'
-  ? import.meta.env.VITE_API_BASE_URL
-  : '';
-
 interface TextContent {
     value: string;
     annotations?: any;
@@ -61,6 +57,10 @@ interface ChatBotProps {
   onFirstPrompt: (chatTitle: string) => void
   isMobile: boolean
 }
+
+const baseApiUrl = import.meta.env.MODE === 'production'
+  ? import.meta.env.VITE_API_BASE_URL
+  : '';
 
 const ChatBot: React.FC<ChatBotProps> = ({ activeChat, onFirstPrompt, isMobile }) => {
   const [messages, setMessages] = useState<Message[]>([]);

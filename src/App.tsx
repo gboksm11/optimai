@@ -7,14 +7,16 @@ import StreamingTextDemo from './pages/text';
 import { Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
+const baseApiUrl = import.meta.env.MODE === 'production'
+  ? import.meta.env.VITE_API_BASE_URL
+  : '';
+
+  console.log(import.meta.env.MODE)
+
 interface Chat {
   id: string,
   title: string
 }
-
-const baseApiUrl = import.meta.env.MODE === 'production'
-  ? import.meta.env.VITE_API_BASE_URL
-  : '';
 
 function App() {
   const [chats, setChats] = useState<Chat[]>([]);
@@ -64,25 +66,7 @@ function App() {
     };
   }, [isSidebarOpen]);
 
-  useEffect(() => {
-    // ... existing code ...
-  
-    const handleClickOutside = (event: MouseEvent) => {
-      if (isSidebarOpen &&
-          sidebarRef.current &&
-          !sidebarRef.current.contains(event.target as Node) &&
-          toggleButtonRef.current &&
-          !toggleButtonRef.current.contains(event.target as Node)) {
-        setIsSidebarOpen(false);
-      }
-    };
-  
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isSidebarOpen]);
-
+  const handleNewChat = async() => {
     const response = await fetch(`${baseApiUrl}/api/createThread`, {
       method: "GET",
       headers: {
