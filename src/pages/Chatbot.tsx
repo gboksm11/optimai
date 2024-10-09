@@ -162,6 +162,7 @@ const ChatBot: React.FC<ChatBotProps> = ({ activeChat, onFirstPrompt, isMobile, 
         }
     } else {
         setMessages([]);
+        setLastMessageIsLoading(false)
     }
 
   }, [activeChat]);
