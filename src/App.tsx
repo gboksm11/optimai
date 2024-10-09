@@ -18,14 +18,21 @@ interface Chat {
   title: string
 }
 
+interface ActiveChat {
+  id: string,
+  isNewChat: boolean
+}
+
 function App() {
   const [chats, setChats] = useState<Chat[]>([]);
-  const [activeChat, setActiveChat] = useState<string>('1');
+  const [activeChat, setActiveChat] = useState<ActiveChat>({id: "1", isNewChat: true});
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
   const sidebarRef = useRef<HTMLDivElement>(null);
   const toggleButtonRef = useRef<HTMLButtonElement>(null);
+
+  const [isCurrentlyNewChat, setIsCurrentlyNewChat] = useState(false);
 
   useEffect(() => {
     const checkIfMobile = () => {
@@ -40,10 +47,10 @@ function App() {
 
   useEffect(() => {
     const storedChats = localStorage.getItem("chats");
-    if (storedChats) {
+    if (storedChats && JSON.parse(storedChats).length > 0) {
       const chats = JSON.parse(storedChats)
       setChats(chats);
-      setActiveChat(chats[0].id)
+      setActiveChat({id: chats[0].id, isNewChat: false})
     }
   }, []);
 
@@ -67,6 +74,7 @@ function App() {
   }, [isSidebarOpen]);
 
   const handleNewChat = async() => {
+    console.log(`creating new chat id`)
     const response = await fetch(`${baseApiUrl}/api/createThread`, {
       method: "GET",
       headers: {
@@ -77,7 +85,7 @@ function App() {
     if (!response.ok) {
       alert(`Failed to create new chat: ${response.status}`)
     }
-
+    console.log(`done`)
     const data = await response.json();
 
     const id = data.id;
@@ -86,20 +94,22 @@ function App() {
     const newChat = { id: id, title: `New Chat` };
     const updatedChats = [...chats, newChat];
     setChats(updatedChats);
-    setActiveChat(newChat.id);
-
+    setActiveChat({id: newChat.id, isNewChat: true});
     localStorage.setItem('chats', JSON.stringify(updatedChats));
+
+    return newChat.id;
   };
 
   const handleSelectedChat = (chatid : string) => {
-    setActiveChat(chatid);
+    setIsCurrentlyNewChat(false)
+    setActiveChat({id: chatid, isNewChat: false});
     setIsSidebarOpen(false); // Close sidebar on mobile after selecting a chat
     console.log(`in ${chatid}`)
   }
 
   const updateChatTitle = (chatTitle: string) => {
     const updatedChats = chats.map(chat => 
-      chat.id === activeChat ? { ...chat, title: chatTitle } : chat
+      chat.id === activeChat.id ? { ...chat, title: chatTitle } : chat
     );
   
     setChats(updatedChats);
@@ -109,6 +119,16 @@ function App() {
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
+
+  const handleNoSelectedChat = (chatId: string, chatTitle: string) => {
+    setIsCurrentlyNewChat(true)
+    const newChat = { id: chatId, title: chatTitle};
+    const updatedChats = [...chats, newChat];
+    setChats(updatedChats);
+    setActiveChat({id: newChat.id, isNewChat: true});
+    localStorage.setItem('chats', JSON.stringify(updatedChats));
+  }
+
 
   return (
     <main className="flex h-screen w-screen overflow-hidden">
@@ -126,7 +146,7 @@ function App() {
             <Menu className="h-6 w-6" />
           </Button>
         </div>
-        <ChatBot isMobile={isMobile} activeChat={activeChat} onFirstPrompt={updateChatTitle}/>
+        <ChatBot isMobile={isMobile} activeChat={activeChat} onFirstPrompt={updateChatTitle} onNoChat={handleNoSelectedChat}/>
       </div>
     </main>
   );

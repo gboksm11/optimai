@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Mic, Paperclip, Send } from 'lucide-react'
-import logo from "../assets/logo.png";
+import logo from "../assets/hovering-logo.gif";
 import Image from '@/components/custom-components/Image';
 import loadingAnim from "../assets/loading-anim.gif";
 import MarkdownIt from 'markdown-it';
@@ -53,16 +53,18 @@ interface TextContent {
   
 
 interface ChatBotProps {
-  activeChat: string // id of thread to be loaded
+  activeChat: any // id of thread to be loaded
   onFirstPrompt: (chatTitle: string) => void
-  isMobile: boolean
+  onNoChat: (chatId: string, chatTitle: string) =>  void
+  isMobile: boolean,
+  isNewChat: boolean
 }
 
 const baseApiUrl = import.meta.env.MODE === 'production'
   ? import.meta.env.VITE_API_BASE_URL
   : '';
 
-const ChatBot: React.FC<ChatBotProps> = ({ activeChat, onFirstPrompt, isMobile }) => {
+const ChatBot: React.FC<ChatBotProps> = ({ activeChat, onFirstPrompt, isMobile, onNoChat}) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState<string>('');
 
@@ -82,6 +84,8 @@ const ChatBot: React.FC<ChatBotProps> = ({ activeChat, onFirstPrompt, isMobile }
 
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const [isNoChat, setIsNoChat] = useState(false);
 
   useEffect(() => {
     if (isMobile) {
@@ -114,11 +118,16 @@ const ChatBot: React.FC<ChatBotProps> = ({ activeChat, onFirstPrompt, isMobile }
   }, [messages]);
 
   const loadMessages = useCallback(async () => {
-    if (activeChat !== "1") {
+    if (isNoChat) {
+        setIsNoChat(false);
+        return;
+    }
+
+    if (!activeChat.isNewChat && !isNoChat) {
         console.log(activeChat)
         setIsLoadingMessages(true);
         try {
-          const response = await fetch(`${baseApiUrl}/api/getThreadMessages?id=${activeChat}`);
+          const response = await fetch(`${baseApiUrl}/api/getThreadMessages?id=${activeChat.id}`);
           if (!response.ok) {
             throw new Error('Failed to load messages');
           }
@@ -150,20 +159,24 @@ const ChatBot: React.FC<ChatBotProps> = ({ activeChat, onFirstPrompt, isMobile }
           setIsLoadingMessages(false);
         }
     } else {
-
+        setMessages([]);
     }
 
   }, [activeChat]);
 
   useEffect(() => {
+
     if (activeChat) {
-      loadMessages();
+
+        loadMessages();
+
       setInput(''); // Clear the input when switching chats
       setSelectedImages([]); // clear images preview
       setSelectedFiles([])
       setSelectedImagesURLs([])
       setChatImages([]);
     }
+
   }, [activeChat, loadMessages]);
 
 
@@ -177,17 +190,26 @@ const ChatBot: React.FC<ChatBotProps> = ({ activeChat, onFirstPrompt, isMobile }
     e.preventDefault()
     setInput(e.target.value);
   };
-  //console.log(isSending)
+
+
+  console.log(activeChat)
+
   const handleSend = async (e: React.FormEvent<HTMLFormElement>) => {
-    //console.log("hello")
     e.preventDefault();
+    // let newChatId = "";
+    if (activeChat.id == '1' ) { // first ever chat
+        setIsNoChat(true);
+    }
+    
+
+
     if (isSending) return;
 
     setIsSending(true);
 
 
     const newMessage : Message = {
-        threadId: activeChat,
+        threadId: activeChat.id == "1" ? null : activeChat.id,
         role: "user",
         content: []
     };
@@ -237,6 +259,7 @@ const ChatBot: React.FC<ChatBotProps> = ({ activeChat, onFirstPrompt, isMobile }
       });
 
       if (!response.ok) {
+        setIsSending(false);
         throw new Error('Failed to send message');
       }
 
@@ -289,6 +312,11 @@ const ChatBot: React.FC<ChatBotProps> = ({ activeChat, onFirstPrompt, isMobile }
             const file_url = await fetchImageById(file_id_generated, file_type);
             setChatFiles(prev => [...prev, {id: userMessageIndexId + 1, fileUrl: file_url}])
           }
+
+          if (event.type == "threadId") {
+            onNoChat(event.threadId, input.trim());
+          }
+
         }
       }
     } catch (error) {
@@ -409,11 +437,11 @@ const ChatBot: React.FC<ChatBotProps> = ({ activeChat, onFirstPrompt, isMobile }
   return (
     <div className="flex flex-col h-full w-full bg-white rounded-lg overflow-hidden">
       <ScrollArea className="flex-grow p-4 md:px-16 whitespace-pre-wrap overflow-y-auto" ref={scrollAreaRef}>
-        {messages.length == 0 &&
+        {messages.length == 0 && activeChat.isNewChat &&
             <img className='mx-auto w-48 md:w-72' src={logo} alt="Logo" />
         }
         {isLoadingMessages ? (
-            <img className='w-48 md:w-72 mx-auto mt-12' src={loadingAnim} alt="Loading" />
+            <img className='w-48 md:w-96 mx-auto mt-12' src={loadingAnim} alt="Loading" />
         ) : (
           messages.map((message, index) => (
             <div key={index} className={`mb-4 ${message.role === 'user' ? 'text-right' : 'text-left'}`}>

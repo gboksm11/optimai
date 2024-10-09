@@ -5,7 +5,7 @@ import { PlusCircle } from 'lucide-react';
 
 interface SidebarProps {
   chats: { id: string; title: string }[];
-  activeChat: string | null;
+  activeChat: any;
   onSelectChat: (id: string) => void;
   onNewChat: () => void;
 }
@@ -25,7 +25,7 @@ const Sidebar: React.FC<SidebarProps> = ({ chats, activeChat, onSelectChat, onNe
                 key={chat.id}
                 onClick={() => onSelectChat(chat.id)}
                 className={`w-11/12 justify-start px-4 py-2 text-left mt-2 ml-2 text-white text-clip overflow-hidden ${
-                  activeChat === chat.id ? 'bg-white text-gray-900' : 'bg-gray-800 hover:bg-gray-700'
+                  activeChat.id === chat.id ? 'bg-white text-gray-900' : 'bg-gray-800 hover:bg-gray-700'
                 }`}
               >
                 {chat.title}
