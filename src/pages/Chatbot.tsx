@@ -87,6 +87,8 @@ const ChatBot: React.FC<ChatBotProps> = ({ activeChat, onFirstPrompt, isMobile, 
 
   const [isNoChat, setIsNoChat] = useState(false);
 
+  const [lastMessageIsLoading, setLastMessageIsLoading] = useState(false);
+
   useEffect(() => {
     if (isMobile) {
       // Mobile-specific adjustments
@@ -193,9 +195,8 @@ const ChatBot: React.FC<ChatBotProps> = ({ activeChat, onFirstPrompt, isMobile, 
   };
 
 
-  console.log(activeChat)
-
   const handleSend = async (e: React.FormEvent<HTMLFormElement>) => {
+    setLastMessageIsLoading(true);
     e.preventDefault();
     // let newChatId = "";
     if (activeChat.id == '1' ) { // first ever chat
@@ -316,6 +317,10 @@ const ChatBot: React.FC<ChatBotProps> = ({ activeChat, onFirstPrompt, isMobile, 
 
           if (event.type == "threadId") {
             onNoChat(event.threadId, input.trim());
+          }
+
+          if (event.type == "done") {
+            setLastMessageIsLoading(false)
           }
 
         }
@@ -455,7 +460,12 @@ const ChatBot: React.FC<ChatBotProps> = ({ activeChat, onFirstPrompt, isMobile, 
               </div>
             </div>
           ))
+          
         )}
+        { lastMessageIsLoading && <div>
+            <img className='w-24 md:w-48 mx-auto mt-6' src={loadingAnim}></img>
+            <p className='text-blue-600 font-bold text-center'>Generating...</p>
+            </div>}
         <div ref={messagesEndRef} />
       </ScrollArea>
       
