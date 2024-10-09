@@ -124,7 +124,6 @@ const ChatBot: React.FC<ChatBotProps> = ({ activeChat, onFirstPrompt, isMobile, 
     }
 
     if (!activeChat.isNewChat && !isNoChat) {
-        console.log(activeChat)
         setIsLoadingMessages(true);
         try {
           const response = await fetch(`${baseApiUrl}/api/getThreadMessages?id=${activeChat.id}`);
@@ -152,7 +151,8 @@ const ChatBot: React.FC<ChatBotProps> = ({ activeChat, onFirstPrompt, isMobile, 
             chatImages.push({id: index, images: messageURLs})
         }
 
-        setChatImages(chatImages)
+        setChatImages(chatImages);
+
         } catch (error) {
           console.error('Error loading messages:', error);
         } finally {
@@ -174,7 +174,8 @@ const ChatBot: React.FC<ChatBotProps> = ({ activeChat, onFirstPrompt, isMobile, 
       setSelectedImages([]); // clear images preview
       setSelectedFiles([])
       setSelectedImagesURLs([])
-      setChatImages([]);
+      setChatImages([])
+      setChatFiles([]);
     }
 
   }, [activeChat, loadMessages]);
@@ -375,7 +376,11 @@ const ChatBot: React.FC<ChatBotProps> = ({ activeChat, onFirstPrompt, isMobile, 
                       <p className='text-left'>{messageText}</p>
             }
 
-            {messageFileUrl && <embed src={messageFileUrl} type="application/pdf" width="100%" height="600px" />}
+            {messageFileUrl && <iframe
+  src={messageFileUrl}
+  style={{ width: "100%", height: "600px", border: "none" }}
+  title="PDF Viewer"
+/>}
 
         </div>
     )
