@@ -14,7 +14,7 @@ const Sidebar: React.FC<SidebarProps> = ({ chats, activeChat, onSelectChat, onNe
     return (
         <div className="w-64 bg-gray-900 text-white h-full flex flex-col">
           <div className="p-4">
-            <p className='p-4 scroll-m-20 text-2xl font-extrabold tracking-tight lg:text-4xl'>Optim<span className='text-[#012ea5]'>AI</span></p>
+            <p className='p-4 scroll-m-20 text-2xl font-extrabold tracking-tight lg:text-4xl'>Optim<span className='text-[#012ea5]'>AIssssss</span></p>
             <Button onClick={onNewChat} className="w-full bg-gray-700 hover:bg-gray-600">
               <PlusCircle className="mr-2 h-4 w-4" /> New chat
             </Button>
